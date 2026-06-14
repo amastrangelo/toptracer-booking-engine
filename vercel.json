@@ -1,6 +1,11 @@
 {
-  "rewrites": [
-    { "source": "/toptracer-booking", "destination": "/toptracer-booking.html" },
-    { "source": "/toptracer-admin", "destination": "/toptracer-admin.html" }
+  "version": 2,
+  "builds": [
+    { "src": "*.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/toptracer-admin", "dest": "/toptracer-admin.html" },
+    { "src": "/toptracer-booking", "dest": "/toptracer-booking.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
