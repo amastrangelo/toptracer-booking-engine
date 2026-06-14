@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Toptracer Bay — Orange Lake Golf</title>
+<script src="https://js.stripe.com/v3/"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1B2A3B;
+    --navy-mid: #243547;
+    --navy-light: #2E4460;
+    --gold: #C8922A;
+    --gold-light: #F5E8D0;
+    --gold-dark: #8A6118;
+    --teal: #1D9E75;
+    --teal-dark: #0F6E56;
+    --teal-light: #E1F5EE;
+    --teal-deep: #085041;
+    --red: #E24B4A;
+    --red-light: #FCEBEB;
+    --gray-50: #F8F7F4;
+    --gray-100: #F1EFE8;
+    --gray-200: #D3D1C7;
+    --gray-400: #888780;
+    --gray-600: #5F5E5A;
+    --gray-900: #1a1918;
+    --white: #ffffff;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  }
+  html { background: var(--gray-50); min-height: 100vh; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: var(--gray-900); background: var(--gray-50); min-height: 100vh; }
+
+  .page-header { background: var(--navy); padding: 0 1.5rem; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo img { height: 38px; width: auto; }
+  .logo-text { display: flex; flex-direction: column; }
+  .logo-name { font-size: 15px; font-weight: 600; color: white; letter-spacing: -0.01em; line-height: 1.2; }
+  .logo-sub { font-size: 11px; color: rgba(255,255,255,0.55); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .test-pill { background: rgba(200,146,42,0.2); color: #F5C878; font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(200,146,42,0.3); }
+  .header-phone { font-size: 12px; color: rgba(255,255,255,0.55); display: flex; align-items: center; gap: 5px; }
+  .header-phone a { color: rgba(255,255,255,0.55); text-decoration: none; }
+  .header-phone a:hover { color: white; }
+
+  .hero-strip { background: var(--navy-mid); border-bottom: 3px solid var(--gold); padding: 12px 1.5rem; text-align: center; }
+  .hero-strip p { font-size: 13px; color: rgba(255,255,255,0.75); }
+  .hero-strip strong { color: var(--gold); }
+
+  .main { max-width: 580px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+  .step-bar { display: flex; align-items: center; margin-bottom: 2rem; }
+  .step { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray-400); }
+  .step.active { color: var(--navy); font-weight: 500; }
+  .step.done { color: var(--gray-400); }
+  .step-dot { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; background: white; flex-shrink: 0; transition: all 0.2s; }
+  .step.active .step-dot { background: var(--gold); border-color: var(--gold); color: white; }
+  .step.done .step-dot { background: var(--navy); border-color: var(--navy); color: white; }
+  .step-line { flex: 1; height: 1px; background: var(--gray-200); margin: 0 8px; }
+
+  .card { background: white; border-radius: var(--radius-lg); border: 1px solid var(--gray-200); padding: 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 1.25rem; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { width: 28px; height: 28px; border-radius: 50%; background: var(--gold-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .card-title .icon svg { width: 14px; height: 14px; fill: var(--gold-dark); }
+  .section-hint { font-size: 12px; font-weight: 400; color: var(--gray-400); margin-left: auto; }
+
+  .booking-summary { background: var(--navy); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+  .bs-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .bs-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .bs-row.total { border-top: 1px solid rgba(255,255,255,0.15); margin-top: 6px; padding-top: 10px; border-bottom: none; }
+  .bs-lbl { color: rgba(255,255,255,0.55); }
+  .bs-val { color: white; font-weight: 500; }
+  .price-display { font-size: 24px; font-weight: 600; color: var(--gold); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 11px; font-weight: 600; color: var(--gray-600); letter-spacing: 0.05em; text-transform: uppercase; }
+  input[type=text], input[type=email], input[type=tel] { width: 100%; padding: 10px 12px; font-size: 14px; font-family: inherit; color: var(--gray-900); background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
+  input[type=text]:focus, input[type=email]:focus, input[type=tel]:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,146,42,0.12); }
+  input::placeholder { color: var(--gray-200); }
+  .checkbox-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--gray-600); cursor: pointer; padding: 4px 0; text-transform: none; letter-spacing: normal; font-weight: 400; }
+  .checkbox-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--gold); cursor: pointer; flex-shrink: 0; }
+
+  .stripe-element { padding: 10px 12px; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); min-height: 40px; transition: border-color 0.15s, box-shadow 0.15s; }
+  .stripe-element.StripeElement--focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,146,42,0.12); }
+  .stripe-element.StripeElement--invalid { border-color: var(--red); }
+
+  .policy-notice { background: var(--gray-50); border-left: 3px solid var(--gold); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 10px 14px; font-size: 12px; color: var(--gray-600); line-height: 1.6; margin-bottom: 1.25rem; }
+  .policy-notice strong { color: var(--navy); display: block; margin-bottom: 3px; }
+
+  .btn-primary { width: 100%; padding: 14px; background: var(--navy); color: white; border: none; border-radius: var(--radius-md); font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.15s, transform 0.1s; letter-spacing: -0.01em; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; transform: none; }
+  .btn-pay { background: var(--gold) !important; }
+  .btn-pay:hover { background: var(--gold-dark) !important; }
+  .btn-back { background: none; border: none; font-size: 13px; color: var(--gray-400); cursor: pointer; font-family: inherit; padding: 8px 0; text-decoration: underline; display: block; margin: 8px auto 0; }
+  .btn-back:hover { color: var(--gray-600); }
+
+  .security-row { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; color: var(--gray-400); margin-top: 10px; }
+  .security-row svg { width: 14px; height: 14px; fill: var(--gray-400); }
+  .security-row strong { color: var(--gray-600); }
+
+  .error-msg { font-size: 12px; color: var(--red); margin-top: 8px; display: none; padding: 8px 12px; background: var(--red-light); border-radius: var(--radius-sm); }
+
+  .processing-view { display: none; flex-direction: column; align-items: center; padding: 3rem 1rem; text-align: center; }
+  .spinner { width: 44px; height: 44px; border: 3px solid var(--gray-100); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.75s linear infinite; margin-bottom: 1.25rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-title { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .processing-sub { font-size: 13px; color: var(--gray-400); }
+
+  .confirm-view { display: none; text-align: center; padding: 1rem 0.5rem; }
+  .confirm-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--gold-light); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+  .confirm-icon svg { width: 32px; height: 32px; fill: var(--gold-dark); }
+  .confirm-title { font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.02em; }
+  .confirm-sub { font-size: 14px; color: var(--gray-400); margin-bottom: 1.5rem; }
+  .conf-num { font-size: 13px; color: var(--gray-400); margin-bottom: 1.5rem; }
+  .conf-num strong { color: var(--gold-dark); font-size: 15px; }
+  .arrival-notice { background: var(--navy); border-radius: var(--radius-md); padding: 12px 16px; font-size: 13px; color: rgba(255,255,255,0.8); text-align: left; margin-bottom: 1.25rem; line-height: 1.6; }
+  .arrival-notice strong { display: block; margin-bottom: 3px; color: var(--gold); font-size: 13px; }
+  .email-confirm { font-size: 13px; color: var(--gray-400); margin-bottom: 1.5rem; }
+  .email-confirm span { color: var(--gold-dark); font-weight: 500; }
+  .btn-secondary { padding: 10px 28px; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); font-size: 14px; font-weight: 500; color: var(--gray-600); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .btn-secondary:hover { background: var(--gray-50); border-color: var(--gray-400); }
+
+  .player-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1rem; }
+  .player-btn { padding: 12px 6px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); cursor: pointer; text-align: center; background: white; transition: all 0.15s; }
+  .player-btn:hover { border-color: var(--gold); }
+  .player-btn.selected { border: 2px solid var(--gold); background: var(--gold-light); }
+  .player-btn.contact { border-color: var(--gray-200); background: var(--gray-50); }
+  .player-num { font-size: 16px; font-weight: 600; color: var(--navy); }
+  .player-btn.selected .player-num { color: var(--gold-dark); }
+  .player-btn.contact .player-num { color: var(--gray-400); }
+  .player-sub { font-size: 10px; color: var(--gray-400); margin-top: 2px; }
+  .player-btn.selected .player-sub { color: var(--gold-dark); }
+
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav span { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .cal-btn { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gray-400); font-size: 16px; transition: all 0.15s; }
+  .cal-btn:hover { background: var(--gold-light); border-color: var(--gold); color: var(--gold-dark); }
+  .day-headers { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin-bottom: 6px; }
+  .day-hdr { text-align: center; font-size: 11px; font-weight: 600; color: var(--gray-400); padding: 4px 0; text-transform: uppercase; letter-spacing: 0.04em; }
+  .date-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .date-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--gray-200); cursor: pointer; background: white; transition: all 0.15s; position: relative; }
+  .date-cell:hover { border-color: var(--gold); background: var(--gold-light); }
+  .date-cell.selected { background: var(--navy); border-color: var(--navy); }
+  .date-cell.selected::after { background: rgba(255,255,255,0.5); }
+  .date-cell.past { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+  .dc-day { font-size: 10px; color: var(--gray-400); margin-bottom: 1px; }
+  .dc-num { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .date-cell.selected .dc-day { color: rgba(255,255,255,0.6); }
+  .date-cell.selected .dc-num { color: white; }
+  .date-cell.peak .dc-num { color: var(--gold-dark); }
+
+  .dur-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .dur-btn { padding: 14px 8px; border: 1px solid var(--gray-200); border-radius: var(--radius-md); cursor: pointer; text-align: center; background: white; transition: all 0.15s; }
+  .dur-btn:hover { border-color: var(--gold); background: var(--gold-light); }
+  .dur-btn.selected { border: 2px solid var(--gold); background: var(--gold-light); }
+  .dur-time { font-size: 16px; font-weight: 600; color: var(--navy); }
+  .dur-price { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
+  .dur-btn.selected .dur-time { color: var(--gold-dark); }
+  .dur-btn.selected .dur-price { color: var(--gold-dark); }
+
+  .time-legend { display: flex; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-400); }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .time-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+  .time-slot { padding: 8px 4px; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); cursor: pointer; text-align: center; font-size: 12px; font-weight: 500; color: var(--navy); background: white; transition: all 0.15s; border-left-width: 3px; }
+  .time-slot:hover { border-color: var(--gold); background: var(--gold-light); }
+  .time-slot.selected { background: var(--navy); border-color: var(--navy); color: white; border-left-color: var(--gold) !important; }
+  .time-slot.am { border-left-color: #5DCAA5; }
+  .time-slot.mid { border-left-color: var(--gold); }
+  .time-slot.pm { border-left-color: #ED93B1; }
+  .slot-price { font-size: 10px; font-weight: 400; opacity: 0.7; margin-top: 1px; }
+  .time-slot.selected .slot-price { opacity: 0.8; }
+
+  .notice { border-radius: var(--radius-md); padding: 10px 14px; font-size: 13px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; }
+  .notice.info { background: var(--gold-light); color: var(--gold-dark); border-left: 3px solid var(--gold); }
+  .notice.warn { background: var(--gray-50); color: var(--gray-600); border-left: 3px solid var(--gray-200); }
+  .notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; fill: currentColor; }
+
+  .page-footer { background: var(--navy); padding: 1.5rem; text-align: center; margin-top: 2rem; }
+  .page-footer p { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .page-footer a { color: rgba(255,255,255,0.55); text-decoration: none; }
+  .page-footer a:hover { color: var(--gold); }
+
+  @media (max-width: 480px) {
+    .main { padding: 1rem 0.75rem 3rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .player-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .time-grid { grid-template-columns: repeat(3, 1fr); }
+    .header-phone { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-inner">
+    <a class="logo" href="https://orangelakegolf.com" target="_blank" style="display:flex;align-items:center;gap:16px;text-decoration:none;">
+      <svg width="96" height="54" viewBox="0 0 96 54" xmlns="http://www.w3.org/2000/svg" aria-label="Orange Lake Golf">
+        <text x="2" y="13" font-family="Georgia,'Times New Roman',serif" font-size="9.5" font-weight="400" fill="#C8922A" letter-spacing="3">ORANGE</text>
+        <text x="14" y="24" font-family="Georgia,'Times New Roman',serif" font-size="9.5" font-weight="400" fill="#C8922A" letter-spacing="3">LAKE</text>
+        <text x="0" y="52" font-family="Georgia,'Times New Roman',serif" font-size="36" font-weight="700" fill="#C8922A">G</text>
+        <text x="28" y="50" font-family="Georgia,'Times New Roman',serif" font-size="24" font-weight="400" fill="#C8922A" letter-spacing="1">OLF</text>
+      </svg>
+      <div style="width:1px;height:36px;background:rgba(255,255,255,0.15);"></div>
+      <div style="display:flex;flex-direction:column;">
+        <span style="font-size:13px;font-weight:600;color:white;letter-spacing:-0.01em;line-height:1.2;">Toptracer Bay Booking</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.45);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;">The Legends · Kissimmee, FL</span>
+      </div>
+    </a>
+    <div class="header-right">
+      <div class="header-phone">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.01L6.6 10.8z"/></svg>
+        <a href="tel:4072391050">(407) 239-1050</a>
+      </div>
+      <div class="test-pill">Test mode</div>
+    </div>
+  </div>
+</header>
+
+<div class="hero-strip">
+  <p>Toptracer Range at <strong>The Legends</strong> · 12397 Legends Drive, Kissimmee FL 34747 · 12 bays · Open 10am–10pm</p>
+</div>
+
+<main class="main">
+  <div class="step-bar">
+    <div class="step active" id="s1"><div class="step-dot" id="sd1">1</div><span>Book</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="s2"><div class="step-dot" id="sd2">2</div><span>Details</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="s3"><div class="step-dot" id="sd3">3</div><span>Pay</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="s4"><div class="step-dot" id="sd4">4</div><span>Done</span></div>
+  </div>
+
+  <!-- STEP 1: BOOKING -->
+  <div id="view-booking">
+    <div class="card">
+      <div class="card-title">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+        How many players?
+        <span class="section-hint">max 4 per bay</span>
+      </div>
+      <div class="player-grid" id="player-grid"></div>
+      <div id="bay-notice"></div>
+    </div>
+
+    <div class="card" id="date-card" style="display:none;">
+      <div class="card-title">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M20 3h-1V1h-2v2H7V1H5v2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 18H4V8h16v13z"/></svg></div>
+        Choose a date
+        
+      </div>
+      <div class="cal-nav">
+        <button class="cal-btn" onclick="changeMonth(-1)">&#8249;</button>
+        <span id="month-label">June 2026</span>
+        <button class="cal-btn" onclick="changeMonth(1)">&#8250;</button>
+      </div>
+      <div class="day-headers">
+        <div class="day-hdr">Su</div><div class="day-hdr">Mo</div><div class="day-hdr">Tu</div>
+        <div class="day-hdr">We</div><div class="day-hdr">Th</div><div class="day-hdr">Fr</div><div class="day-hdr">Sa</div>
+      </div>
+      <div class="date-grid" id="date-grid"></div>
+      </div>
+    </div>
+
+    <div class="card" id="dur-card" style="display:none;">
+      <div class="card-title">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></div>
+        Duration
+        <span class="section-hint" id="dur-hint"></span>
+      </div>
+      <div class="dur-grid" id="dur-grid"></div>
+    </div>
+
+    <div class="card" id="time-card" style="display:none;">
+      <div class="card-title">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg></div>
+        Choose a time
+        <span class="section-hint" id="time-hint"></span>
+      </div>
+      <div class="time-legend" id="time-legend"></div>
+      <div class="time-grid" id="time-grid"></div>
+    </div>
+
+    <div id="booking-summary-wrap" style="display:none;">
+      <div class="booking-summary">
+        <div class="bs-row"><span class="bs-lbl">Players</span><span class="bs-val" id="sum-players">—</span></div>
+        <div class="bs-row"><span class="bs-lbl">Bays reserved</span><span class="bs-val" id="sum-bays">—</span></div>
+        <div class="bs-row"><span class="bs-lbl">Date</span><span class="bs-val" id="sum-date">—</span></div>
+        <div class="bs-row"><span class="bs-lbl">Time</span><span class="bs-val" id="sum-time">—</span></div>
+        <div class="bs-row"><span class="bs-lbl">Duration</span><span class="bs-val" id="sum-dur">—</span></div>
+        <div class="bs-row total"><span class="bs-lbl">Total</span><span class="price-display" id="sum-price">—</span></div>
+      </div>
+      <button class="btn-primary" id="continue-btn" onclick="goToDetails()">
+        <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        <span id="continue-lbl">Continue to your details</span>
+      </button>
+      <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px;">Free cancellation up to 24 hours before your session</p>
+    </div>
+  </div>
+
+  <!-- STEP 2: DETAILS -->
+  <div id="view-details" style="display:none;">
+    <div class="booking-summary">
+      <div class="bs-row"><span class="bs-lbl">Date & time</span><span class="bs-val" id="d-datetime">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Duration</span><span class="bs-val" id="d-dur">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Bays</span><span class="bs-val" id="d-bays">—</span></div>
+      <div class="bs-row total"><span class="bs-lbl">Total</span><span class="price-display" id="d-price">—</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+        Your details
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>First name</label><input type="text" id="f-first" placeholder="Jane" autocomplete="given-name"></div>
+        <div class="form-group"><label>Last name</label><input type="text" id="f-last" placeholder="Smith" autocomplete="family-name"></div>
+        <div class="form-group full"><label>Email address</label><input type="email" id="f-email" placeholder="jane@email.com" autocomplete="email"></div>
+        <div class="form-group full"><label>Mobile number</label><input type="tel" id="f-phone" placeholder="(407) 555-0000" autocomplete="tel"></div>
+        <div class="form-group full"><label class="checkbox-row"><input type="checkbox" id="f-optin"> Keep me updated on deals and events at Orange Lake Golf</label></div>
+      </div>
+      <div class="error-msg" id="details-err">Please enter your first name, last name, and email to continue.</div>
+      <button class="btn-primary" onclick="goToPayment()">
+        <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        Continue to payment
+      </button>
+      <button class="btn-back" onclick="goToBooking()">← Back to booking</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: PAYMENT -->
+  <div id="view-payment" style="display:none;">
+    <div class="booking-summary">
+      <div class="bs-row"><span class="bs-lbl">Date & time</span><span class="bs-val" id="p-datetime">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Duration</span><span class="bs-val" id="p-dur">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Guest</span><span class="bs-val" id="p-name">—</span></div>
+      <div class="bs-row total"><span class="bs-lbl">Total due today</span><span class="price-display" id="p-price">—</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <div class="icon"><svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg></div>
+        Payment details
+      </div>
+      <div class="form-group" style="margin-bottom:12px;"><label>Card number</label><div id="card-number" class="stripe-element"></div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Expiry date</label><div id="card-expiry" class="stripe-element"></div></div>
+        <div class="form-group"><label>Security code</label><div id="card-cvc" class="stripe-element"></div></div>
+      </div>
+      <div class="form-group" style="margin-bottom:1.25rem;"><label>Name on card</label><input type="text" id="f-cardname" placeholder="Jane Smith" autocomplete="cc-name"></div>
+      <div class="policy-notice">
+        <strong>Cancellation policy</strong>
+        Free cancellation 24+ hours before your session for a full refund. Cancellations within 24 hours receive a 50% refund. No-shows are non-refundable. By completing this booking you agree to these terms.
+      </div>
+      <div class="error-msg" id="payment-err">Please check your card details and try again.</div>
+      <button class="btn-primary btn-pay" id="pay-btn" onclick="processPayment()">
+        <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        <span id="pay-lbl">Pay $0.00 · Complete booking</span>
+      </button>
+      <div class="security-row">
+        <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        Secured by <strong>Stripe</strong> · PCI DSS Level 1 certified
+      </div>
+      <button class="btn-back" onclick="goToDetails()">← Back to your details</button>
+    </div>
+  </div>
+
+  <!-- PROCESSING -->
+  <div id="view-processing" class="processing-view">
+    <div class="spinner"></div>
+    <div class="processing-title">Processing your payment</div>
+    <div class="processing-sub">Please don't close this page</div>
+  </div>
+
+  <!-- STEP 4: CONFIRMATION -->
+  <div id="view-confirm" class="confirm-view">
+    <div class="confirm-icon">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <div class="confirm-title">You're all set!</div>
+    <div class="confirm-sub">Your Toptracer bay is booked and confirmed.</div>
+    <div class="conf-num">Confirmation: <strong id="conf-num">—</strong></div>
+    <div class="booking-summary" style="text-align:left;margin-bottom:1.25rem;">
+      <div class="bs-row"><span class="bs-lbl">Guest</span><span class="bs-val" id="c-name">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Date & time</span><span class="bs-val" id="c-datetime">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Duration</span><span class="bs-val" id="c-dur">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Bays</span><span class="bs-val" id="c-bays">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">Payment</span><span class="bs-val" id="c-card">—</span></div>
+      <div class="bs-row total"><span class="bs-lbl">Total paid</span><span class="price-display" id="c-price">—</span></div>
+    </div>
+    <div class="arrival-notice">
+      <strong>On arrival</strong>
+      Check in at the Toptracer range desk at The Legends. Staff will activate your bay. Please arrive 10–15 minutes before your session.
+    </div>
+    <div class="email-confirm">A confirmation has been sent to <span id="c-email">—</span></div>
+    <button class="btn-secondary" onclick="resetAll()">Book another bay</button>
+  </div>
+</main>
+
+<footer class="page-footer">
+  <p>© 2026 Orange Lake Golf · <a href="https://orangelakegolf.com" target="_blank">orangelakegolf.com</a> · <a href="tel:4072391050">(407) 239-1050</a></p>
+</footer>
+
+<script>
+const DEFAULT_PRICING={sw:{am:{60:30,90:45,120:60},mid:{60:40,90:60,120:80},pm:{60:45,90:68,120:90}},ts:{am:{60:30,90:45,120:60},mid:{60:40,90:60,120:80},pm:{60:50,90:75,120:100}}};
+function getPricing(){return JSON.parse(localStorage.getItem('olg_pricing')||JSON.stringify(DEFAULT_PRICING));}
+const PRICING=getPricing();
+const LAST={60:21,90:20.5,120:20};
+const MNS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DS=['Su','Mo','Tu','We','Th','Fr','Sa'];
+const POPTS=[{l:'1',s:'1 bay'},{l:'2',s:'1 bay'},{l:'3',s:'1 bay'},{l:'4',s:'1 bay'},{l:'5–6',s:'2 bays'},{l:'7–8',s:'2 bays'},{l:'9–10',s:'3 bays'},{l:'11–12',s:'3 bays'},{l:'13–16',s:'4 bays'},{l:'17–20',s:'5 bays'},{l:'21–24',s:'6 bays'},{l:'25+',s:'call us',contact:true}];
+function baysFor(i){if(i<=3)return 1;if(i<=5)return 2;if(i<=7)return 3;if(i===8)return 4;if(i===9)return 5;if(i===10)return 6;return 0;}
+let st={yr:2026,mo:5,players:null,bays:null,date:null,dur:null,time:null,timeLabel:null,price:null,ppb:null,isContact:false};
+let cardNumber=null,cardExpiry=null,cardCvc=null;
+const stripe=Stripe('pk_test_51K3ki2GsonF3sq4VWlJOxLE6FXcJRXYL2OAyPjQxkip116PPa7MEmQgukejY92EF4XMajXXKBG4xKe23lUqPxuRF00JPCXySGE');
+function isPeak(d){return d===4||d===5||d===6;}
+function getPG(d){return isPeak(d)?'ts':'sw';}
+function getWin(h){return h<16?'am':h<19?'mid':'pm';}
+function renderPlayers(){
+  const g=document.getElementById('player-grid');g.innerHTML='';
+  POPTS.forEach((o,i)=>{
+    const b=document.createElement('div');
+    b.className='player-btn'+(o.contact?' contact':'')+(st.players===i?' selected':'');
+    b.innerHTML='<div class="player-num">'+o.l+'</div><div class="player-sub">'+o.s+'</div>';
+    b.onclick=()=>selectPlayers(i,o.contact||false);
+    g.appendChild(b);
+  });
+}
+function selectPlayers(idx,isContact){
+  st.players=idx;st.bays=baysFor(idx);st.isContact=isContact;st.date=null;st.dur=null;st.time=null;
+  renderPlayers();
+  const notice=document.getElementById('bay-notice');notice.innerHTML='';
+  if(isContact){notice.innerHTML='<div class="notice warn"><svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.01L6.6 10.8z"/></svg><div>Groups of 25+ require a staff booking. Please call <strong>(407) 239-1050</strong> or visit the range desk.</div></div>';
+    ['date-card','dur-card','time-card'].forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('booking-summary-wrap').style.display='none';return;
+  }
+  if(st.bays>1)notice.innerHTML='<div class="notice info"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg><div>Your group needs <strong>'+st.bays+' bays</strong>. We\'ll reserve them side-by-side at your chosen time.</div></div>';
+  document.getElementById('date-card').style.display='block';
+  renderCalendar();updateContinueBtn();
+}
+function changeMonth(d){st.mo+=d;if(st.mo>11){st.mo=0;st.yr++;}if(st.mo<0){st.mo=11;st.yr--;}renderCalendar();}
+function renderCalendar(){
+  document.getElementById('month-label').textContent=MNS[st.mo]+' '+st.yr;
+  const g=document.getElementById('date-grid');g.innerHTML='';
+  const first=new Date(st.yr,st.mo,1).getDay();const days=new Date(st.yr,st.mo+1,0).getDate();const today=new Date();
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.style.visibility='hidden';e.className='date-cell';g.appendChild(e);}
+  for(let d=1;d<=days;d++){
+    const dt=new Date(st.yr,st.mo,d);const dow=dt.getDay();
+    const isPast=dt<new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    const el=document.createElement('div');
+    el.className='date-cell'+(isPast?' past':'');
+    if(st.date&&st.date.d===d&&st.date.m===st.mo&&st.date.y===st.yr)el.classList.add('selected');
+    if(!isPast)el.onclick=()=>selectDate(d,st.mo,st.yr,dow);
+    el.innerHTML='<div class="dc-day">'+DS[dow]+'</div><div class="dc-num">'+d+'</div>';
+    g.appendChild(el);
+  }
+}
+function selectDate(d,m,y,dow){
+  st.date={d,m,y,dow};st.dur=null;st.time=null;renderCalendar();
+  showDuration(dow);updateContinueBtn();
+}
+function showDuration(dow){
+  document.getElementById('dur-card').style.display='block';
+  const PRICING=getPricing();
+  const g=document.getElementById('dur-grid');g.innerHTML='';
+  [60,90,120].forEach(dur=>{
+    const btn=document.createElement('div');btn.className='dur-btn'+(st.dur===dur?' selected':'');
+    const from=Math.min(...['am','mid','pm'].map(w=>PRICING[getPG(dow)][w][dur]));
+    btn.innerHTML='<div class="dur-time">'+dur+' min</div><div class="dur-price">from $'+from+(st.bays>1?' /bay':'')+'</div>';
+    btn.onclick=()=>selectDur(dur);g.appendChild(btn);
+  });
+  document.getElementById('time-card').style.display='none';
+}
+function selectDur(dur){
+  st.dur=dur;st.time=null;
+  document.querySelectorAll('.dur-btn').forEach((b,i)=>b.classList.toggle('selected',[60,90,120][i]===dur));
+  showTimes();updateContinueBtn();
+}
+function showTimes(){
+  if(!st.dur||!st.date)return;
+  document.getElementById('time-card').style.display='block';
+  const PRICING=getPricing();
+  const{dow}=st.date;const pg=getPG(dow);const p=PRICING[pg];const lastH=LAST[st.dur];
+  document.getElementById('time-hint').textContent=st.dur+' min'+(st.bays>1?' · '+st.bays+' bays':'');
+  document.getElementById('time-legend').innerHTML='<div class="leg-item"><div class="leg-dot" style="background:#5DCAA5;"></div><span>AM $'+(p.am[st.dur]*st.bays)+'</span></div><div class="leg-item"><div class="leg-dot" style="background:var(--gold);"></div><span>MID $'+(p.mid[st.dur]*st.bays)+'</span></div><div class="leg-item"><div class="leg-dot" style="background:#ED93B1;"></div><span>PM $'+(p.pm[st.dur]*st.bays)+'</span></div>'+(st.bays>1?'<div class="leg-item" style="font-size:11px;color:var(--gray-400);">(total for '+st.bays+' bays)</div>':'');
+  const g=document.getElementById('time-grid');g.innerHTML='';
+  for(let h=10;h<=21;h++){[0,30].forEach(min=>{
+    const tot=h+min/60;if(tot>lastH+0.01)return;
+    const lbl=(h>12?h-12:h)+(min?':30':':00')+(h>=12?'pm':'am');
+    const win=getWin(h);const ppb=p[win][st.dur];const total=ppb*st.bays;
+    const el=document.createElement('div');el.className='time-slot '+win;
+    el.innerHTML=lbl+'<div class="slot-price">$'+total+(st.bays>1?' total':'')+'</div>';
+    const key=h+':'+min;
+    if(st.time===key)el.classList.add('selected');
+    el.onclick=(e)=>selectTime(h,min,lbl,ppb,total,key,e);
+    g.appendChild(el);
+  });}
+}
+function selectTime(h,min,lbl,ppb,total,key,e){
+  st.time=key;st.timeLabel=lbl;st.ppb=ppb;st.price=total;
+  document.querySelectorAll('.time-slot').forEach(el=>el.classList.remove('selected'));
+  e.currentTarget.classList.add('selected');
+  updateSummary();updateContinueBtn();
+}
+function updateSummary(){
+  if(!st.date||!st.dur||!st.time)return;
+  const{d,m,y}=st.date;const dateStr=MNS[m].slice(0,3)+' '+d+', '+y;
+  document.getElementById('booking-summary-wrap').style.display='block';
+  document.getElementById('sum-players').textContent=POPTS[st.players].l+' players';
+  document.getElementById('sum-bays').textContent=st.bays+(st.bays===1?' bay':' bays');
+  document.getElementById('sum-date').textContent=dateStr;
+  document.getElementById('sum-time').textContent=st.timeLabel;
+  document.getElementById('sum-dur').textContent=st.dur+' min session';
+  document.getElementById('sum-price').textContent='$'+st.price+'.00';
+  document.getElementById('continue-lbl').textContent='Continue — $'+st.price+'.00';
+  document.getElementById('pay-lbl').textContent='Pay $'+st.price+'.00 · Complete booking';
+}
+function updateContinueBtn(){const btn=document.getElementById('continue-btn');btn.disabled=!st.date||!st.dur||!st.time;}
+function goToDetails(){
+  if(!st.date||!st.dur||!st.time)return;
+  const{d,m,y}=st.date;const dateStr=MNS[m].slice(0,3)+' '+d+', '+y;
+  document.getElementById('d-datetime').textContent=dateStr+' · '+st.timeLabel;
+  document.getElementById('d-dur').textContent=st.dur+' min session';
+  document.getElementById('d-bays').textContent=st.bays+(st.bays===1?' bay':' bays');
+  document.getElementById('d-price').textContent='$'+st.price+'.00';
+  document.getElementById('view-booking').style.display='none';
+  document.getElementById('view-details').style.display='block';
+  setStep(2);window.scrollTo(0,0);
+}
+function goToBooking(){
+  document.getElementById('view-details').style.display='none';
+  document.getElementById('view-booking').style.display='block';
+  setStep(1);window.scrollTo(0,0);
+}
+function goToPayment(){
+  const first=document.getElementById('f-first').value.trim();
+  const last=document.getElementById('f-last').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  if(!first||!last||!email){document.getElementById('details-err').style.display='block';return;}
+  document.getElementById('details-err').style.display='none';
+  const{d,m,y}=st.date;const dateStr=MNS[m].slice(0,3)+' '+d+', '+y;
+  document.getElementById('p-datetime').textContent=dateStr+' · '+st.timeLabel;
+  document.getElementById('p-dur').textContent=st.dur+' min session';
+  document.getElementById('p-name').textContent=first+' '+last;
+  document.getElementById('p-price').textContent='$'+st.price+'.00';
+  document.getElementById('pay-lbl').textContent='Pay $'+st.price+'.00 · Complete booking';
+  const cn=document.getElementById('f-cardname');if(!cn.value)cn.value=first+' '+last;
+  document.getElementById('view-details').style.display='none';
+  document.getElementById('view-payment').style.display='block';
+  setStep(3);window.scrollTo(0,0);
+  setTimeout(initStripe,150);
+}
+function initStripe(){
+  if(cardNumber)return;
+  const elements=stripe.elements({fonts:[{cssSrc:'https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap'}]});
+  const style={base:{fontFamily:'Inter,system-ui,sans-serif',fontSize:'14px',color:'#1a1918','::placeholder':{color:'#D3D1C7'}},invalid:{color:'#E24B4A'}};
+  cardNumber=elements.create('cardNumber',{style,showIcon:true});
+  cardExpiry=elements.create('cardExpiry',{style});
+  cardCvc=elements.create('cardCvc',{style});
+  cardNumber.mount('#card-number');cardExpiry.mount('#card-expiry');cardCvc.mount('#card-cvc');
+  [cardNumber,cardExpiry,cardCvc].forEach(el=>{el.on('change',e=>{
+    if(e.error){document.getElementById('payment-err').style.display='block';document.getElementById('payment-err').textContent=e.error.message;}
+    else document.getElementById('payment-err').style.display='none';
+  });});
+}
+async function processPayment(){
+  const btn=document.getElementById('pay-btn');btn.disabled=true;
+  document.getElementById('view-payment').style.display='none';
+  document.getElementById('view-processing').style.display='flex';window.scrollTo(0,0);
+  const name=document.getElementById('f-first').value.trim()+' '+document.getElementById('f-last').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const cardName=document.getElementById('f-cardname').value.trim()||name;
+  try{
+    const{paymentMethod,error}=await stripe.createPaymentMethod({type:'card',card:cardNumber,billing_details:{name:cardName,email}});
+    if(error){document.getElementById('view-processing').style.display='none';document.getElementById('view-payment').style.display='block';document.getElementById('payment-err').style.display='block';document.getElementById('payment-err').textContent=error.message;btn.disabled=false;return;}
+    await new Promise(r=>setTimeout(r,1800));
+    const now=new Date();const confNum='TT-'+now.getFullYear()+(String(now.getMonth()+1).padStart(2,'0'))+(String(now.getDate()).padStart(2,'0'))+'-'+Math.floor(1000+Math.random()*9000);
+    const brand=paymentMethod.card.brand.charAt(0).toUpperCase()+paymentMethod.card.brand.slice(1);
+    const last4=paymentMethod.card.last4;
+    const{d,m,y}=st.date;const dateStr=MNS[m].slice(0,3)+' '+d+', '+y;
+    document.getElementById('conf-num').textContent=confNum;
+    document.getElementById('c-name').textContent=name;
+    document.getElementById('c-datetime').textContent=dateStr+' · '+st.timeLabel;
+    document.getElementById('c-dur').textContent=st.dur+' min session';
+    document.getElementById('c-bays').textContent=st.bays+(st.bays===1?' bay':' bays');
+    document.getElementById('c-card').textContent=brand+' ending '+last4;
+    document.getElementById('c-price').textContent='$'+st.price+'.00';
+    document.getElementById('c-email').textContent=email;
+    // Save booking to localStorage so admin dashboard can read it
+    const booking = {
+      confNum, name, email,
+      players: POPTS[st.players].l,
+      bays: st.bays,
+      date: dateStr,
+      time: st.timeLabel,
+      dur: st.dur,
+      price: st.price,
+      pricePerBay: st.ppb,
+      card: brand+' ending '+last4,
+      type: 'online',
+      status: 'confirmed',
+      ts: Date.now()
+    };
+    const existing = JSON.parse(localStorage.getItem('olg_bookings')||'[]');
+    existing.push(booking);
+    localStorage.setItem('olg_bookings', JSON.stringify(existing));
+    document.getElementById('view-processing').style.display='none';
+    document.getElementById('view-confirm').style.display='block';
+    setStep(4);window.scrollTo(0,0);
+  }catch(err){
+    document.getElementById('view-processing').style.display='none';document.getElementById('view-payment').style.display='block';
+    document.getElementById('payment-err').style.display='block';document.getElementById('payment-err').textContent='Something went wrong. Please try again.';btn.disabled=false;
+  }
+}
+function setStep(n){
+  [1,2,3,4].forEach(i=>{
+    const s=document.getElementById('s'+i);const d=document.getElementById('sd'+i);
+    s.classList.remove('active','done');
+    if(i<n){s.classList.add('done');d.innerHTML='✓';}
+    else if(i===n){s.classList.add('active');d.textContent=i;}
+    else{d.textContent=i;}
+  });
+}
+function resetAll(){
+  st={yr:2026,mo:5,players:null,bays:null,date:null,dur:null,time:null,timeLabel:null,price:null,ppb:null,isContact:false};
+  cardNumber=null;cardExpiry=null;cardCvc=null;
+  ['f-first','f-last','f-email','f-phone','f-cardname'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-optin').checked=false;
+  document.getElementById('bay-notice').innerHTML='';
+  ['date-card','dur-card','time-card'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('booking-summary-wrap').style.display='none';
+  document.getElementById('view-confirm').style.display='none';
+  document.getElementById('view-booking').style.display='block';
+  setStep(1);renderPlayers();window.scrollTo(0,0);
+}
+renderPlayers();
+document.getElementById('continue-btn').disabled=true;
+</script>
+</body>
+</html>
